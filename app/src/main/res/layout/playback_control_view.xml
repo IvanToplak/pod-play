@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom"
+    android:background="@color/episodePlayerControlsBackground"
+    android:layoutDirection="ltr"
+    android:orientation="vertical"
+    android:textAlignment="gravity">
+
+    <LinearLayout
+        android:id="@+id/controls_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingTop="4dp">
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@id/exo_rew"
+            android:layout_width="@dimen/video_player_controls_size"
+            android:layout_height="@dimen/video_player_controls_size"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/exo_controls_rewind_description"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_replay_10_white" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@id/exo_repeat_toggle"
+            style="@style/ExoMediaButton"
+            android:contentDescription="@string/exo_controls_repeat_one_description" />
+
+        <ImageButton
+            android:id="@id/exo_play"
+            style="@style/ExoMediaButton.Play"
+            android:contentDescription="@string/exo_controls_play_description" />
+
+        <ImageButton
+            android:id="@id/exo_pause"
+            style="@style/ExoMediaButton.Pause"
+            android:contentDescription="@string/exo_controls_pause_description" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@id/exo_ffwd"
+            android:layout_width="@dimen/video_player_controls_size"
+            android:layout_height="@dimen/video_player_controls_size"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/exo_controls_fastforward_description"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_forward_30_white" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/seekbar_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/video_seekbar_layout_margin_top"
+        android:layout_marginBottom="@dimen/video_seekbar_layout_margin_bottom"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@id/exo_position"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:paddingLeft="@dimen/video_position_padding"
+            android:paddingRight="@dimen/video_position_padding"
+            android:textColor="@color/episodePlayerAccent"
+            android:textSize="@dimen/video_position_text_size"
+            android:textStyle="bold" />
+
+        <View
+            android:id="@id/exo_progress_placeholder"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/video_seekbar_size"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@id/exo_duration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:paddingLeft="@dimen/video_duration_padding"
+            android:paddingRight="@dimen/video_duration_padding"
+            android:textColor="@color/episodePlayerAccent"
+            android:textSize="@dimen/video_duration_text_size"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">PodPlay</string>
+    <string name="search_hint">Enter podcast search</string>
+    <string name="search">Search</string>
+    <string name="podcast_image_description">Podcast image</string>
+    <string name="feed_image_description">Feed image</string>
+    <string name="subscribe">Subscribe</string>
+    <string name="ok_button">OK</string>
+    <string name="subscribed_podcasts">Subscribed</string>
+    <string name="unsubscribe">Unsubscribe</string>
+    <string name="error_loading_feed">Error loading feed %1$s</string>
+    <string name="episode_image_description">Episode image</string>
+    <string name="play_episode_duration">Play | %1$s</string>
+    <!-- New episodes notification -->
+    <string name="new_episodes_notification_title">New episodes</string>
+    <string name="new_episodes_notification_text">%1$d new episode(s) for %2$s</string>
+    <string name="new_episodes_notification_channel_name">New episodes notification</string>
+    <string name="new_episodes_notification_channel_description">Shows notifications when new episodes appear</string>
+    <!-- Now playing notification -->
+    <string name="notification_channel">Now Playing</string>
+    <string name="notification_channel_description">Shows which podcast is currently playing</string>
+    <!-- Audio player -->
+    <string name="album_art_alt">Album art</string>
+    <!-- Video player -->
+    <string name="audio_language">en</string>
+    <!-- Error messages -->
+    <string name="error_media_not_found">Could not locate requested media.</string>
+    <string name="generic_error">The application has encountered an unexpected error.</string>
+</resources>

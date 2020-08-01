@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/podcastImage"
+        android:layout_width="@dimen/podcast_item_image_size"
+        android:layout_height="@dimen/podcast_item_image_size"
+        android:layout_marginStart="@dimen/podcast_item_margin"
+        android:layout_marginTop="@dimen/podcast_item_margin"
+        android:layout_marginBottom="@dimen/podcast_item_margin"
+        android:adjustViewBounds="true"
+        android:contentDescription="@string/podcast_image_description"
+        android:scaleType="fitStart"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/podcastNameTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/podcast_item_name_margin"
+        android:layout_marginTop="@dimen/podcast_item_name_margin"
+        android:layout_marginEnd="@dimen/podcast_item_name_margin"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/podcastImage"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Name" />
+
+    <TextView
+        android:id="@+id/podcastGenreTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/podcast_genre_margin"
+        android:layout_marginEnd="@dimen/podcast_genre_margin"
+        android:layout_marginBottom="@dimen/podcast_genre_margin"
+        android:textSize="@dimen/podcast_genre_text_size"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/podcastImage"
+        app:layout_constraintTop_toBottomOf="@+id/podcastNameTextView"
+        tools:text="Genre" />
+</androidx.constraintlayout.widget.ConstraintLayout>
