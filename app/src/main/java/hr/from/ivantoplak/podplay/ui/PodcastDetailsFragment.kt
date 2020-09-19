@@ -47,7 +47,8 @@ class PodcastDetailsFragment : HiltFragment(), EpisodeListAdapter.EpisodeListAda
         router.showEpisodeDetailsScreen()
     }
 
-    fun updateEpisodes() {
+    fun updateScreen() {
+        updateHeader()
         viewModel.activePodcastViewData?.episodes?.let {
             episodeListAdapter.setEpisodes(it)
         }

@@ -2,19 +2,11 @@ package hr.from.ivantoplak.podplay.extensions
 
 import android.graphics.Bitmap
 import android.net.Uri
-import android.support.v4.media.MediaBrowserCompat.MediaItem
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DataSource
-
-/**
- * Custom property that holds whether an item is [MediaItem.FLAG_BROWSABLE] or
- * [MediaItem.FLAG_PLAYABLE].
- */
-const val METADATA_KEY_PODPLAY_FLAGS =
-    "hr.from.ivantoplak.podplay.service.media.METADATA_KEY_PODPLAY_FLAGS"
 
 /**
  * Useful extensions for [MediaMetadataCompat].
@@ -105,14 +97,6 @@ inline val MediaMetadataCompat.mediaUri: Uri
 
 inline val MediaMetadataCompat.downloadStatus
     get() = getLong(MediaMetadataCompat.METADATA_KEY_DOWNLOAD_STATUS)
-
-/**
- * Custom property for storing whether a [MediaMetadataCompat] item represents an
- * item that is [MediaItem.FLAG_BROWSABLE] or [MediaItem.FLAG_PLAYABLE].
- */
-@MediaItem.Flags
-inline val MediaMetadataCompat.flag
-    get() = this.getLong(METADATA_KEY_PODPLAY_FLAGS).toInt()
 
 /**
  * Useful extensions for [MediaMetadataCompat.Builder].
@@ -231,18 +215,6 @@ inline var MediaMetadataCompat.Builder.downloadStatus: Long
     get() = throw IllegalAccessException("Cannot get from MediaMetadataCompat.Builder")
     set(value) {
         putLong(MediaMetadataCompat.METADATA_KEY_DOWNLOAD_STATUS, value)
-    }
-
-/**
- * Custom property for storing whether a [MediaMetadataCompat] item represents an
- * item that is [MediaItem.FLAG_BROWSABLE] or [MediaItem.FLAG_PLAYABLE].
- */
-@MediaItem.Flags
-inline var MediaMetadataCompat.Builder.flag: Int
-    @Deprecated(NO_GET, level = DeprecationLevel.ERROR)
-    get() = throw IllegalAccessException("Cannot get from MediaMetadataCompat.Builder")
-    set(value) {
-        putLong(METADATA_KEY_PODPLAY_FLAGS, value.toLong())
     }
 
 /**

@@ -24,7 +24,7 @@ class RouterImpl @Inject constructor(private val fragmentManager: FragmentManage
                 )
                 .commit()
         } else {
-            fragment.updateEpisodes()
+            fragment.updateScreen()
         }
     }
 
