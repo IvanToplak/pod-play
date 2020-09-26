@@ -1,27 +1,28 @@
 package hr.from.ivantoplak.podplay.viewmodel
 
-import android.util.Log
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.ViewModel
+import hr.from.ivantoplak.podplay.coroutines.CoroutineContextProvider
 import hr.from.ivantoplak.podplay.mappings.toPodcastSummaryViews
 import hr.from.ivantoplak.podplay.model.PodcastSummaryViewData
 import hr.from.ivantoplak.podplay.repository.ItunesRepo
+import kotlinx.coroutines.withContext
 
-private const val TAG = "SearchViewModel"
-private const val SEARCH_PODCASTS_ERROR_MESSAGE = "Error searching podcast on remote API"
-
-class SearchViewModel @ViewModelInject constructor(private val itunesRepo: ItunesRepo) :
+class SearchViewModel @ViewModelInject constructor(
+    private val itunesRepo: ItunesRepo,
+    private val coroutineContextProvider: CoroutineContextProvider
+) :
     ViewModel() {
 
-    var searchQuery: String = ""
+    var searchQuery = ""
+    private val searchPodcastResults = mutableListOf<PodcastSummaryViewData>()
 
-    fun searchPodcasts(term: String, callback: (List<PodcastSummaryViewData>) -> Unit) {
-        try {
-            itunesRepo.searchByTerm(term) { results ->
-                callback(results?.toPodcastSummaryViews() ?: emptyList())
-            }
-        } catch (ex: Exception) {
-            Log.e(TAG, SEARCH_PODCASTS_ERROR_MESSAGE, ex)
+    suspend fun searchPodcasts(term: String): List<PodcastSummaryViewData> =
+        withContext(coroutineContextProvider.io()) {
+            if (searchQuery == term && searchPodcastResults.isNotEmpty()) return@withContext searchPodcastResults
+            searchQuery = term
+            searchPodcastResults.clear()
+            searchPodcastResults.addAll(itunesRepo.searchByTerm(term).toPodcastSummaryViews())
+            return@withContext searchPodcastResults
         }
-    }
 }

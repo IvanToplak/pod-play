@@ -4,5 +4,5 @@ import hr.from.ivantoplak.podplay.service.network.ItunesPodcast
 
 interface ItunesRepo {
 
-    fun searchByTerm(term: String, callBack: (List<ItunesPodcast>?) -> Unit)
+    suspend fun searchByTerm(term: String): List<ItunesPodcast>
 }

@@ -1,70 +1,66 @@
 package hr.from.ivantoplak.podplay.repository
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Transformations
+import android.util.Log
 import hr.from.ivantoplak.podplay.db.PodcastDao
 import hr.from.ivantoplak.podplay.mappings.*
 import hr.from.ivantoplak.podplay.model.Episode
 import hr.from.ivantoplak.podplay.model.Podcast
 import hr.from.ivantoplak.podplay.model.PodcastUpdateInfo
 import hr.from.ivantoplak.podplay.service.network.FeedService
-import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+
+private const val TAG = "PodcastRepoImpl"
+private const val UPDATE_PODCAST_EPISODES_ERROR_MESSAGE =
+    "Error while updating episodes for feed URL"
 
 class PodcastRepoImpl @Inject constructor(
     private val feedService: FeedService,
     private val podcastDao: PodcastDao
 ) : PodcastRepo {
 
-    override fun getPodcast(feedUrl: String, callback: (Podcast) -> Unit) {
+    override suspend fun getPodcast(feedUrl: String): Podcast {
         val podcast = podcastDao.loadPodcast(feedUrl)?.toPodcast()
-        if (podcast != null) {
+        return if (podcast != null) {
             val episodes = podcastDao.loadEpisodes(podcast.id).toEpisodes()
-            callback(podcast.copy(episodes = episodes))
+            podcast.copy(episodes = episodes)
         } else {
-            feedService.getFeed(feedUrl) { feedResponse ->
-                val pod = feedResponse.toPodcast(feedUrl, "", "")
-                callback(pod)
-            }
+            val feedResponse = feedService.getFeed(feedUrl)
+            feedResponse.toPodcast(feedUrl, "", "")
         }
     }
 
-    override fun save(podcast: Podcast) {
+    override suspend fun savePodcast(podcast: Podcast) {
         val podcastId = podcastDao.insertPodcast(podcast.toDbPodcast()).toInt()
         podcastDao.insertEpisodes(podcast.episodes.toDBEpisodes(podcastId))
     }
 
-    override fun getAll(): LiveData<List<Podcast>> {
-        val dbPodcastsLiveData = podcastDao.loadPodcasts()
-        return Transformations.map(dbPodcastsLiveData) { dbPodcasts -> dbPodcasts.toPodcasts() }
+    override fun getAllPodcasts(): Flow<List<Podcast>> =
+        podcastDao.loadPodcasts().map { dbPodcasts -> dbPodcasts.toPodcasts() }
+
+
+    override suspend fun deletePodcast(podcast: Podcast) =
+        podcastDao.deletePodcast(podcast.toDbPodcast())
+
+    private suspend fun getNewEpisodes(localPodcast: Podcast): List<Episode> {
+        val feedResponse = feedService.getFeed(localPodcast.feedUrl)
+        val localEpisodes = podcastDao.loadEpisodes(localPodcast.id).toEpisodes()
+        val responseEpisodes = feedResponse.episodes.responseToEpisodes(localPodcast.id)
+        return responseEpisodes.minus(localEpisodes)
     }
 
-    override fun delete(podcast: Podcast) = podcastDao.deletePodcast(podcast.toDbPodcast())
-
-    private fun getNewEpisodes(localPodcast: Podcast, callBack: (List<Episode>) -> Unit) {
-        feedService.getFeed(localPodcast.feedUrl) { response ->
-            if (response.isInvalid()) {
-                callBack(emptyList())
-            } else {
-                val localEpisodes = podcastDao.loadEpisodes(localPodcast.id).toEpisodes()
-                val newEpisodes =
-                    response.episodes.responseToEpisodes(localPodcast.id).minus(localEpisodes)
-                callBack(newEpisodes)
-            }
-        }
-    }
-
-    private fun saveNewEpisodes(episodes: List<Episode>) =
+    private suspend fun saveNewEpisodes(episodes: List<Episode>) =
         podcastDao.insertEpisodes(episodes.toDBEpisodes())
 
-    override fun updatePodcastEpisodes(callback: (List<PodcastUpdateInfo>) -> Unit) {
+    override suspend fun updatePodcastEpisodes(): List<PodcastUpdateInfo> {
         val updatedPodcasts: MutableList<PodcastUpdateInfo> = mutableListOf()
         val podcasts = podcastDao.loadPodcastsStatic().toPodcasts()
-        val processCount = AtomicInteger(podcasts.count())
 
         for (podcast in podcasts) {
-            getNewEpisodes(podcast) { newEpisodes ->
-                if (newEpisodes.count() > 0) {
+            val result = runCatching {
+                val newEpisodes = getNewEpisodes(podcast)
+                if (newEpisodes.isNotEmpty()) {
                     saveNewEpisodes(newEpisodes)
                     updatedPodcasts.add(
                         PodcastUpdateInfo(
@@ -75,10 +71,11 @@ class PodcastRepoImpl @Inject constructor(
                         )
                     )
                 }
-                if (processCount.decrementAndGet() == 0) {
-                    callback(updatedPodcasts)
-                }
+            }
+            result.onFailure { exception ->
+                Log.e(TAG, "$UPDATE_PODCAST_EPISODES_ERROR_MESSAGE: ${podcast.feedUrl}", exception)
             }
         }
+        return updatedPodcasts
     }
 }

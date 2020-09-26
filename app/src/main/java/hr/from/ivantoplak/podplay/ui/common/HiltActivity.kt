@@ -12,4 +12,7 @@ abstract class HiltActivity : BaseActivity() {
 
     @Inject
     lateinit var screenTitleProvider: ScreenTitleProvider
+
+    @Inject
+    lateinit var messageProvider: MessageProvider
 }

@@ -18,7 +18,7 @@ class PendingIntentFactoryImpl @Inject constructor(@ApplicationContext private v
         podcastActivityIntent.putExtra(EXTRA_FEED_URL, podcastInfo.feedUrl)
         return PendingIntent.getActivity(
             context,
-            0,
+            podcastInfo.id,
             podcastActivityIntent,
             PendingIntent.FLAG_UPDATE_CURRENT
         )

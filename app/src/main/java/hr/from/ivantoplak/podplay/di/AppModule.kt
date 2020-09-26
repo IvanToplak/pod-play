@@ -11,6 +11,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ApplicationComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
+import hr.from.ivantoplak.podplay.coroutines.CoroutineContextProvider
+import hr.from.ivantoplak.podplay.coroutines.CoroutineContextProviderImpl
 import hr.from.ivantoplak.podplay.intent.PendingIntentFactory
 import hr.from.ivantoplak.podplay.intent.PendingIntentFactoryImpl
 import hr.from.ivantoplak.podplay.notification.NotificationFactory
@@ -18,8 +20,10 @@ import hr.from.ivantoplak.podplay.notification.NotificationFactoryImpl
 import hr.from.ivantoplak.podplay.notification.Notifications
 import hr.from.ivantoplak.podplay.notification.NotificationsImpl
 import hr.from.ivantoplak.podplay.service.media.MetadataProvider
-import hr.from.ivantoplak.podplay.service.media.PodplayMediaServiceConnection
 import hr.from.ivantoplak.podplay.service.media.PodplayMediaService
+import hr.from.ivantoplak.podplay.service.media.PodplayMediaServiceConnection
+import hr.from.ivantoplak.podplay.ui.common.MessageProvider
+import hr.from.ivantoplak.podplay.ui.common.MessageProviderImpl
 import hr.from.ivantoplak.podplay.work.*
 import hr.from.ivantoplak.podplay.work.EpisodeUpdateWorkRequestFactory.REPEAT_INTERVAL
 import hr.from.ivantoplak.podplay.work.EpisodeUpdateWorkRequestFactory.REPEAT_UNIT
@@ -85,4 +89,12 @@ abstract class AppModule {
     @Singleton
     @Binds
     abstract fun provideEpisodeUpdateScheduler(impl: EpisodeUpdateSchedulerImpl): EpisodeUpdateScheduler
+
+    @Singleton
+    @Binds
+    abstract fun provideCoroutineContextProvider(impl: CoroutineContextProviderImpl): CoroutineContextProvider
+
+    @Singleton
+    @Binds
+    abstract fun provideMessageProvider(impl: MessageProviderImpl): MessageProvider
 }

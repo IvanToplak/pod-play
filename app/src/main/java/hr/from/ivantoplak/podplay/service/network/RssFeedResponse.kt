@@ -8,10 +8,7 @@ data class RssFeedResponse(
     var summary: String = "",
     var category: String = "",
     var episodes: MutableList<EpisodeResponse> = mutableListOf()
-) {
-    fun isInvalid() =
-        title.isBlank() && description.isBlank() && summary.isBlank() && category.isBlank() && episodes.isEmpty()
-}
+)
 
 data class EpisodeResponse(
     var title: String = "",
