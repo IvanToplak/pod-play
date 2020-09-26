@@ -8,7 +8,6 @@
     <string name="ok_button">OK</string>
     <string name="subscribed_podcasts">Subscribed</string>
     <string name="unsubscribe">Unsubscribe</string>
-    <string name="error_loading_feed">Error loading feed %1$s</string>
     <string name="episode_image_description">Episode image</string>
     <string name="play_episode_duration">Play | %1$s</string>
     <!-- New episodes notification -->
@@ -24,6 +23,12 @@
     <!-- Video player -->
     <string name="audio_language">en</string>
     <!-- Error messages -->
-    <string name="error_media_not_found">Could not locate requested media.</string>
+    <string name="loading_feed_error_message">Error loading feed. Check your internet connection.</string>
+    <string name="media_not_found_error_message">Could not locate requested media.</string>
     <string name="generic_error">The application has encountered an unexpected error.</string>
+    <string name="search_podcasts_error_message">Error searching podcasts. Check your internet connection.</string>
+    <string name="get_podcasts_error_message">Error loading podcasts.</string>
+    <string name="set_active_podcast_error_message">Error setting selected podcast as active podcast.</string>
+    <string name="subscribe_error_message">Error occurred while subscribing to this feed.</string>
+    <string name="unsubscribe_error_message">Error occurred while unsubscribing to this feed.</string>
 </resources>

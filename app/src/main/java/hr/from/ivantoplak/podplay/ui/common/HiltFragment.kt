@@ -13,6 +13,9 @@ abstract class HiltFragment : BaseFragment() {
     @Inject
     lateinit var screenTitleProvider: ScreenTitleProvider
 
+    @Inject
+    lateinit var messageProvider: MessageProvider
+
     protected fun setScreenTitleVisibility(show: Boolean) =
         screenTitleProvider.setTitleVisibility(show)
 }

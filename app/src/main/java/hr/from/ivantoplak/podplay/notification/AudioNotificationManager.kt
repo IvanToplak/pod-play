@@ -7,17 +7,21 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.util.Log
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import hr.from.ivantoplak.podplay.R
+import hr.from.ivantoplak.podplay.coroutines.CoroutineContextProvider
 import kotlinx.coroutines.*
 import java.net.URL
 
+private const val TAG = "AudioNotificationMan"
 private const val NOW_PLAYING_CHANNEL_ID = "hr.from.ivantoplak.podplay.NOW_PLAYING"
 private const val NOW_PLAYING_NOTIFICATION_ID = 0xb339
 private const val REWIND_INCREMENT_MS = 10000L
 private const val FAST_FORWARD_INCREMENT_MS = 30000L
+private const val RESOLVE_URI_AS_BITMAP_ERROR_MESSAGE = "Error resolving notification icon URI as bitmap for URI"
 
 /**
  * A wrapper class for ExoPlayer's PlayerNotificationManager. It sets up the notification shown to
@@ -27,11 +31,13 @@ class AudioNotificationManager(
     private val context: Context,
     private val player: ExoPlayer,
     sessionToken: MediaSessionCompat.Token,
-    notificationListener: PlayerNotificationManager.NotificationListener
+    notificationListener: PlayerNotificationManager.NotificationListener,
+    private val coroutineContextProvider: CoroutineContextProvider
 ) {
 
     private val serviceJob = SupervisorJob()
-    private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
+    private val serviceScope = CoroutineScope(coroutineContextProvider.main() + serviceJob)
+
     private val notificationManager by lazy {
         val mediaController = MediaControllerCompat(context, sessionToken)
         PlayerNotificationManager.createWithNotificationChannel(
@@ -97,15 +103,15 @@ class AudioNotificationManager(
             }
         }
 
-        private suspend fun resolveUriAsBitmap(uri: Uri): Bitmap? {
-            return withContext(Dispatchers.IO) {
+        private suspend fun resolveUriAsBitmap(uri: Uri): Bitmap? =
+            withContext(coroutineContextProvider.io()) {
                 try {
                     val iconUrl = URL(uri.toString())
                     BitmapFactory.decodeStream(iconUrl.openStream())
-                } catch (ex: Exception) {
-                    return@withContext null
+                } catch (exception: Exception) {
+                    Log.e(TAG, "$RESOLVE_URI_AS_BITMAP_ERROR_MESSAGE: $uri", exception)
+                    null
                 }
             }
-        }
     }
 }

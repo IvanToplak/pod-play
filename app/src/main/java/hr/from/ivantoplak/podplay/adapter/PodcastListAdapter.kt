@@ -53,7 +53,7 @@ class PodcastListAdapter(
 
     override fun getItemCount(): Int = podcastSummaryViewList.size
 
-    fun setSearchData(podcastSummaryViewData: List<PodcastSummaryViewData>) {
+    fun setPodcasts(podcastSummaryViewData: List<PodcastSummaryViewData>) {
         podcastSummaryViewList.clear()
         podcastSummaryViewList.addAll(podcastSummaryViewData)
         notifyDataSetChanged()

@@ -2,11 +2,13 @@ package hr.from.ivantoplak.podplay.service.network
 
 import hr.from.ivantoplak.podplay.extensions.containsCaseInsensitive
 import hr.from.ivantoplak.podplay.extensions.transformDate
+import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.*
 import org.w3c.dom.Node
 import java.io.IOException
 import javax.inject.Inject
 import javax.xml.parsers.DocumentBuilder
+import kotlin.coroutines.resumeWithException
 
 private const val SOURCE_DATE_PATTERN = "EEE, dd MMM yyyy HH:mm:ss z"
 
@@ -15,31 +17,33 @@ class RssFeedService @Inject constructor(
     private val documentBuilder: DocumentBuilder
 ) : FeedService {
 
-    override fun getFeed(xmlFileURL: String, callBack: (RssFeedResponse) -> Unit) {
+    override suspend fun getFeed(xmlFileURL: String): RssFeedResponse =
+        suspendCancellableCoroutine { continuation ->
+            val request = Request.Builder().url(xmlFileURL).build()
 
-        val request = Request.Builder().url(xmlFileURL).build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                callBack(RssFeedResponse())
-            }
-
-            @Throws(IOException::class)
-            override fun onResponse(call: Call, response: Response) {
-                if (response.isSuccessful) {
-                    response.body()?.let { responseBody ->
-                        val doc = documentBuilder.parse(responseBody.byteStream())
-                        val rssFeedResponse =
-                            RssFeedResponse()
-                        domToRssFeedResponse(doc, rssFeedResponse)
-                        callBack(rssFeedResponse)
-                    }
-                } else {
-                    callBack(RssFeedResponse())
+            client.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    if (continuation.isCancelled) return
+                    continuation.resumeWithException(e)
                 }
-            }
-        })
-    }
+
+                @Throws(IOException::class)
+                override fun onResponse(call: Call, response: Response) {
+                    if (continuation.isCancelled) return
+                    if (response.isSuccessful) {
+                        response.body()?.let { responseBody ->
+                            val doc = documentBuilder.parse(responseBody.byteStream())
+                            val rssFeedResponse = RssFeedResponse()
+                            domToRssFeedResponse(doc, rssFeedResponse)
+                            continuation.resumeWith(Result.success(rssFeedResponse))
+                        }
+                    } else {
+                        val responseStatus = "${response.code()} ${response.message()}"
+                        continuation.resumeWithException(IOException(responseStatus))
+                    }
+                }
+            })
+        }
 
     private fun domToRssFeedResponse(node: Node, rssFeedResponse: RssFeedResponse) {
         if (node.nodeType == Node.ELEMENT_NODE) {

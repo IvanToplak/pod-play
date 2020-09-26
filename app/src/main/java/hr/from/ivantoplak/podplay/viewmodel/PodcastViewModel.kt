@@ -3,10 +3,8 @@ package hr.from.ivantoplak.podplay.viewmodel
 import android.os.Build
 import android.util.Log
 import androidx.hilt.lifecycle.ViewModelInject
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import hr.from.ivantoplak.podplay.coroutines.CoroutineContextProvider
 import hr.from.ivantoplak.podplay.extensions.*
 import hr.from.ivantoplak.podplay.mappings.toPodcastSummaryView
 import hr.from.ivantoplak.podplay.mappings.toPodcastSummaryViews
@@ -19,8 +17,10 @@ import hr.from.ivantoplak.podplay.repository.PodcastRepo
 import hr.from.ivantoplak.podplay.service.media.MetadataProvider
 import hr.from.ivantoplak.podplay.service.media.PodplayMediaServiceConnection
 import hr.from.ivantoplak.podplay.work.EpisodeUpdateScheduler
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 
 enum class PodcastViewState {
     SEARCH, //show search results
@@ -28,17 +28,13 @@ enum class PodcastViewState {
 }
 
 private const val TAG = "PodcastViewModel"
-private const val GET_PODCAST_ERROR_MESSAGE = "Error retrieving podcast from database/remote API"
-private const val SAVE_PODCAST_ERROR_MESSAGE = "Error saving podcast to database"
-private const val GET_PODCASTS_ERROR_MESSAGE = "Error retrieving podcasts from database"
-private const val DELETE_PODCAST_ERROR_MESSAGE = "Error deleting podcast from database"
-private const val SET_ACTIVE_PODCAST_ERROR_MESSAGE = "Error setting active podcast from URL"
 
 class PodcastViewModel @ViewModelInject constructor(
     private val podcastRepo: PodcastRepo,
     private val episodeUpdateScheduler: EpisodeUpdateScheduler,
     private val podplayMediaServiceConnection: PodplayMediaServiceConnection,
-    private val metadataProvider: MetadataProvider
+    private val metadataProvider: MetadataProvider,
+    private val coroutineContextProvider: CoroutineContextProvider
 ) :
     ViewModel() {
 
@@ -46,11 +42,12 @@ class PodcastViewModel @ViewModelInject constructor(
     var activePodcastViewData: PodcastViewData? = null
         private set
 
-    private var activePodcast: Podcast? = null
+    var subscribedPodcasts = emptyList<PodcastSummaryViewData>()
+    val podcasts: Flow<List<PodcastSummaryViewData>> by lazy { getPodcastsFlow() }
+
     var activeEpisodeViewData: EpisodeViewData? = null
-    private val livePodcastData: LiveData<List<PodcastSummaryViewData>>? by lazy {
-        loadPodcasts()
-    }
+
+    private var activePodcast: Podcast? = null
 
     fun isVideoEpisode() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         activeEpisodeViewData?.isVideo ?: false
@@ -58,86 +55,44 @@ class PodcastViewModel @ViewModelInject constructor(
         false
     }
 
-    fun getPodcast(
-        podcastSummaryViewData: PodcastSummaryViewData,
-        callback: (PodcastViewData) -> Unit
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                podcastRepo.getPodcast(podcastSummaryViewData.feedUrl) { podcast ->
-                    val pod = podcast.copy(
-                        feedTitle = podcastSummaryViewData.name,
-                        imageUrl = podcastSummaryViewData.imageUrl,
-                        artworkUrl = podcastSummaryViewData.artworkUrl
-                    )
-                    activePodcastViewData = pod.toPodcastView()
-                    activePodcast = pod
-                    viewModelScope.launch(Dispatchers.Main) {
-                        activePodcastViewData?.let { callback(it) }
-                    }
-                }
-            } catch (ex: Exception) {
-                Log.e(TAG, GET_PODCAST_ERROR_MESSAGE, ex)
-            }
+    suspend fun getPodcast(podcastSummaryViewData: PodcastSummaryViewData): PodcastViewData =
+        withContext(coroutineContextProvider.io()) {
+            val podcast = podcastRepo.getPodcast(podcastSummaryViewData.feedUrl)
+            val pod = podcast.copy(
+                feedTitle = podcastSummaryViewData.name,
+                imageUrl = podcastSummaryViewData.imageUrl,
+                artworkUrl = podcastSummaryViewData.artworkUrl
+            )
+            activePodcast = pod
+            activePodcastViewData = pod.toPodcastView()
+            activePodcastViewData!!
         }
-    }
 
-    fun saveActivePodcast() {
+    suspend fun saveActivePodcast() = withContext(coroutineContextProvider.io()) {
         activePodcast?.let {
-            viewModelScope.launch(Dispatchers.IO) {
-                try {
-                    podcastRepo.save(it)
-                } catch (ex: Exception) {
-                    Log.e(TAG, SAVE_PODCAST_ERROR_MESSAGE, ex)
-                }
-            }
+            podcastRepo.savePodcast(it)
         }
     }
 
-    fun getPodcasts(): LiveData<List<PodcastSummaryViewData>>? {
-        return livePodcastData
-    }
+    private fun getPodcastsFlow(): Flow<List<PodcastSummaryViewData>> =
+        podcastRepo.getAllPodcasts().map { podcasts -> podcasts.toPodcastSummaryViews() }
+            .flowOn(coroutineContextProvider.io())
 
-    private fun loadPodcasts(): LiveData<List<PodcastSummaryViewData>>? {
-        return try {
-            val liveData = podcastRepo.getAll()
-            Transformations.map(liveData) { podcastList -> podcastList.toPodcastSummaryViews() }
-        } catch (ex: Exception) {
-            Log.e(TAG, GET_PODCASTS_ERROR_MESSAGE, ex)
-            null
-        }
-    }
-
-    fun deleteActivePodcast() {
+    suspend fun deleteActivePodcast() {
         activePodcast?.let {
-            viewModelScope.launch(Dispatchers.IO) {
-                try {
-                    podcastRepo.delete(it)
-                } catch (ex: Exception) {
-                    Log.e(TAG, DELETE_PODCAST_ERROR_MESSAGE, ex)
-                }
-            }
+            podcastRepo.deletePodcast(it)
         }
     }
 
     fun scheduleEpisodeUpdateJob() = episodeUpdateScheduler.scheduleEpisodeBackgroundUpdates()
 
-    fun setActivePodcast(feedUrl: String, callback: (PodcastSummaryViewData) -> Unit) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                podcastRepo.getPodcast(feedUrl) {
-                    activePodcastViewData = it.toPodcastView()
-                    activePodcast = it
-                    val activePodcastSummaryView = it.toPodcastSummaryView()
-                    viewModelScope.launch(Dispatchers.Main) {
-                        callback(activePodcastSummaryView)
-                    }
-                }
-            } catch (ex: Exception) {
-                Log.e(TAG, SET_ACTIVE_PODCAST_ERROR_MESSAGE, ex)
-            }
+    suspend fun setActivePodcast(feedUrl: String): PodcastSummaryViewData =
+        withContext(coroutineContextProvider.io()) {
+            val podcast = podcastRepo.getPodcast(feedUrl)
+            activePodcast = podcast
+            activePodcastViewData = podcast.toPodcastView()
+            podcast.toPodcastSummaryView()
         }
-    }
 
     /**
      * This method takes a media url and does one of the following:

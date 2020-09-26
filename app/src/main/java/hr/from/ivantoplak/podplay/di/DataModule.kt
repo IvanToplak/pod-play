@@ -36,8 +36,7 @@ abstract class DataModule {
             .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create<ItunesService>(
-                ItunesService::class.java)
+            .create(ItunesService::class.java)
 
         @Singleton
         @Provides

@@ -4,12 +4,12 @@ import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
-import androidx.lifecycle.Observer
+import androidx.lifecycle.coroutineScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import hr.from.ivantoplak.podplay.R
@@ -24,6 +24,16 @@ import hr.from.ivantoplak.podplay.viewmodel.PodcastViewModel
 import hr.from.ivantoplak.podplay.viewmodel.PodcastViewState
 import hr.from.ivantoplak.podplay.viewmodel.SearchViewModel
 import kotlinx.android.synthetic.main.activity_podcast.*
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+
+private const val TAG = "PodcastActivity"
+private const val SEARCH_PODCASTS_ERROR_MESSAGE = "Error searching podcast on remote API"
+private const val GET_PODCAST_ERROR_MESSAGE = "Error loading feed"
+private const val GET_PODCASTS_ERROR_MESSAGE = "Error loading feeds"
+private const val SET_ACTIVE_PODCAST_ERROR_MESSAGE =
+    "Error setting selected podcast from notification as active"
 
 class PodcastActivity : HiltActivity(), PodcastListAdapterListener {
 
@@ -72,12 +82,22 @@ class PodcastActivity : HiltActivity(), PodcastListAdapterListener {
 
     override fun onShowDetails(podcastSummaryViewData: PodcastSummaryViewData) {
         loadingPodcastProgressBar.show()
-        podcastViewModel.getPodcast(podcastSummaryViewData) {
-            loadingPodcastProgressBar.hide()
-            if (it.isValid()) {
-                showPodcastDetailsScreen()
-            } else {
-                showError(getString(R.string.error_loading_feed, podcastSummaryViewData.feedUrl))
+        searchMenuItem.collapseActionView()
+        lifecycle.coroutineScope.launch {
+            runCatching { podcastViewModel.getPodcast(podcastSummaryViewData) }.apply {
+                onSuccess {
+                    loadingPodcastProgressBar.hide()
+                    showPodcastDetailsScreen()
+                }
+                onFailure { exception ->
+                    loadingPodcastProgressBar.hide()
+                    messageProvider.longPopup(getString(R.string.loading_feed_error_message))
+                    Log.e(
+                        TAG,
+                        "$GET_PODCAST_ERROR_MESSAGE: podcastSummaryViewData.feedUrl",
+                        exception
+                    )
+                }
             }
         }
     }
@@ -120,9 +140,18 @@ class PodcastActivity : HiltActivity(), PodcastListAdapterListener {
     }
 
     private fun setupPodcastListView() {
-        podcastViewModel.getPodcasts()?.observe(this, Observer { podcasts ->
-            podcasts?.let { showPodcasts() }
-        })
+        lifecycle.coroutineScope.launch {
+            podcastViewModel.podcasts.catch { exception ->
+                messageProvider.longPopup(getString(R.string.get_podcasts_error_message))
+                Log.e(TAG, GET_PODCASTS_ERROR_MESSAGE, exception)
+            }.collect { podcasts ->
+                podcastViewModel.subscribedPodcasts = podcasts
+                when (podcastViewModel.podcastViewState) {
+                    PodcastViewState.SEARCH -> handleSearchIntent(intent)
+                    PodcastViewState.SUBSCRIPTION -> showSubscribedPodcasts()
+                }
+            }
+        }
     }
 
     private fun addBackStackListener() {
@@ -134,36 +163,48 @@ class PodcastActivity : HiltActivity(), PodcastListAdapterListener {
         }
     }
 
-    private fun showPodcasts() {
-        when (podcastViewModel.podcastViewState) {
-            PodcastViewState.SEARCH -> handleSearchIntent(intent)
-            PodcastViewState.SUBSCRIPTION -> showSubscribedPodcasts()
-        }
-    }
-
     private fun handleNotificationIntent(intent: Intent) {
         val podcastFeedUrl = intent.getStringExtra(EXTRA_FEED_URL)
         if (podcastFeedUrl != null) {
-            podcastViewModel.setActivePodcast(podcastFeedUrl) {
-                onShowDetails(it)
+            lifecycle.coroutineScope.launch {
+                runCatching { podcastViewModel.setActivePodcast(podcastFeedUrl) }.apply {
+                    onSuccess { podcast ->
+                        onShowDetails(podcast)
+                    }
+                    onFailure { exception ->
+                        messageProvider.longPopup(getString(R.string.set_active_podcast_error_message))
+                        Log.e(TAG, SET_ACTIVE_PODCAST_ERROR_MESSAGE, exception)
+                    }
+                }
             }
         }
     }
 
     private fun handleSearchIntent(intent: Intent) {
         if (intent.action == Intent.ACTION_SEARCH) {
-            searchViewModel.searchQuery = intent.getStringExtra(SearchManager.QUERY) ?: return
+            val term = intent.getStringExtra(SearchManager.QUERY) ?: return
             podcastViewModel.podcastViewState = PodcastViewState.SEARCH
-            performSearch(searchViewModel.searchQuery)
+            performSearch(term)
         }
     }
 
     private fun performSearch(term: String) {
         loadingPodcastProgressBar.show()
-        searchViewModel.searchPodcasts(term) { results ->
-            loadingPodcastProgressBar.hide()
-            updateTitle()
-            podcastListAdapter.setSearchData(results)
+        lifecycle.coroutineScope.launch {
+            runCatching { searchViewModel.searchPodcasts(term) }.apply {
+                onSuccess { podcasts ->
+                    loadingPodcastProgressBar.hide()
+                    updateTitle()
+                    podcastListAdapter.setPodcasts(podcasts)
+                }
+                onFailure { exception ->
+                    loadingPodcastProgressBar.hide()
+                    updateTitle()
+                    podcastListAdapter.setPodcasts(emptyList())
+                    messageProvider.longPopup(getString(R.string.search_podcasts_error_message))
+                    Log.e(TAG, SEARCH_PODCASTS_ERROR_MESSAGE, exception)
+                }
+            }
         }
     }
 
@@ -173,20 +214,9 @@ class PodcastActivity : HiltActivity(), PodcastListAdapterListener {
         searchMenuItem.isVisible = false
     }
 
-    private fun showError(message: String) {
-        AlertDialog.Builder(this)
-            .setMessage(message)
-            .setPositiveButton(getString(R.string.ok_button), null)
-            .create()
-            .show()
-    }
-
     private fun showSubscribedPodcasts() {
-        val podcasts = podcastViewModel.getPodcasts()?.value
-        podcasts?.let {
-            updateTitle()
-            podcastListAdapter.setSearchData(it)
-        }
+        updateTitle()
+        podcastListAdapter.setPodcasts(podcastViewModel.subscribedPodcasts)
     }
 
     private fun updateTitle() {

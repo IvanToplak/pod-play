@@ -18,6 +18,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import dagger.hilt.android.AndroidEntryPoint
 import hr.from.ivantoplak.podplay.R
+import hr.from.ivantoplak.podplay.coroutines.CoroutineContextProvider
 import hr.from.ivantoplak.podplay.notification.AudioNotificationManager
 import javax.inject.Inject
 
@@ -30,6 +31,9 @@ class PodplayMediaService : MediaBrowserServiceCompat() {
 
     @Inject
     lateinit var metadataProvider: MetadataProvider
+
+    @Inject
+    lateinit var coroutineContextProvider: CoroutineContextProvider
 
     private lateinit var notificationManager: AudioNotificationManager
     private lateinit var mediaSession: MediaSessionCompat
@@ -121,7 +125,8 @@ class PodplayMediaService : MediaBrowserServiceCompat() {
             this,
             exoPlayer,
             mediaSession.sessionToken,
-            PlayerNotificationListener()
+            PlayerNotificationListener(),
+            coroutineContextProvider
         )
     }
 
@@ -179,7 +184,7 @@ class PodplayMediaService : MediaBrowserServiceCompat() {
                 // a type_source error.
                 // An error message is printed to UI via Toast message to inform the user.
                 ExoPlaybackException.TYPE_SOURCE -> {
-                    message = R.string.error_media_not_found
+                    message = R.string.media_not_found_error_message
                     Log.e(TAG, "TYPE_SOURCE: " + error.sourceException.message)
                 }
                 // If the error occurs in a render component, Exoplayer raises a type_remote error.
