@@ -49,7 +49,7 @@ class NotificationFactoryImpl @Inject constructor(
     ) =
         NotificationCompat.Builder(context, NEW_EPISODES_NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_episode_icon)
-            .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
+            .setColor(ContextCompat.getColor(context, R.color.primaryColor))
             .setContentTitle(context.getString(R.string.new_episodes_notification_title))
             .setContentText(
                 context.getString(
