@@ -1,11 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#6200EE</color>
-    <color name="colorPrimaryDark">#3700B3</color>
-    <color name="colorAccent">#03DAC5</color>
+    <!-- Light theme -->
+    <color name="primaryColor">#303f9f</color>
+    <color name="primaryColorVariant">#001970</color>
+    <color name="secondaryColor">#d32f2f</color>
+    <color name="secondaryColorVariant">#9a0007</color>
+    <color name="surfaceColor">#eeeeee</color>
+
+    <!-- Dark theme -->
+    <color name="darkPrimaryColor">#9fa8da</color>
+    <color name="darkSecondaryColor">#9fa8da</color>
+    <color name="darkSurfaceColor">#212121</color>
+
+    <!-- Other constant colors -->
     <color name="episodePlayerBackground">#000000</color>
     <color name="episodePlayerControlsBackground">#4C000000</color>
     <color name="episodePlayerAccent">#FFFFFF</color>
+    <color name="audioPlayerTextColor">#424242</color>
     <color name="mediaListBackground">#F1F1F1</color>
-    <color name="headerBackground">#eeeeee</color>
 </resources>

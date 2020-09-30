@@ -87,9 +87,7 @@
             android:includeFontPadding="false"
             android:paddingLeft="@dimen/video_position_padding"
             android:paddingRight="@dimen/video_position_padding"
-            android:textColor="@color/episodePlayerAccent"
-            android:textSize="@dimen/video_position_text_size"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.PodPlay.VideoPlayer.Controls.Text" />
 
         <View
             android:id="@id/exo_progress_placeholder"
@@ -104,9 +102,7 @@
             android:includeFontPadding="false"
             android:paddingLeft="@dimen/video_duration_padding"
             android:paddingRight="@dimen/video_duration_padding"
-            android:textColor="@color/episodePlayerAccent"
-            android:textSize="@dimen/video_duration_text_size"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.PodPlay.VideoPlayer.Controls.Text" />
 
     </LinearLayout>
 
