@@ -8,9 +8,9 @@ import android.view.ViewGroup
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import com.bumptech.glide.Glide
 import hr.from.ivantoplak.podplay.R
+import hr.from.ivantoplak.podplay.extensions.slideRightTransition
 import hr.from.ivantoplak.podplay.model.NowPlayingMetadata
 import hr.from.ivantoplak.podplay.ui.common.HiltFragment
 import hr.from.ivantoplak.podplay.viewmodel.AudioPlayerViewModel
@@ -25,6 +25,10 @@ class AudioPlayerFragment : HiltFragment() {
     companion object {
         const val TAG = "AudioPlayerFragment"
         fun newInstance() = AudioPlayerFragment()
+    }
+
+    override fun doOnCreate(savedInstanceState: Bundle?) {
+        enterTransition = slideRightTransition()
     }
 
     override fun onCreateView(
@@ -55,18 +59,18 @@ class AudioPlayerFragment : HiltFragment() {
      *
      */
     private fun setupObservers(view: View) {
-        viewModel.mediaMetadata.observe(viewLifecycleOwner,
-            Observer { mediaItem -> updateUI(view, mediaItem) })
-
-        viewModel.mediaButtonRes.observe(viewLifecycleOwner,
-            Observer { res ->
-                mediaButton.setImageResource(res)
+        viewModel.mediaMetadata.observe(
+            viewLifecycleOwner, { mediaItem ->
+                updateUI(view, mediaItem)
             })
 
-        viewModel.mediaPosition.observe(viewLifecycleOwner,
-            Observer { pos ->
-                position.text = NowPlayingMetadata.timestampToHourMinSec(pos)
-            })
+        viewModel.mediaButtonRes.observe(viewLifecycleOwner, { res ->
+            mediaButton.setImageResource(res)
+        })
+
+        viewModel.mediaPosition.observe(viewLifecycleOwner, { pos ->
+            position.text = NowPlayingMetadata.timestampToHourMinSec(pos)
+        })
     }
 
     private fun initializePlaybackIndicators() {
