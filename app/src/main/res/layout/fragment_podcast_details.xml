@@ -17,9 +17,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <androidx.constraintlayout.motion.widget.MotionLayout
+            android:id="@+id/constraintLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            app:layoutDescription="@xml/fragment_podcast_details_header_scene"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -69,15 +71,10 @@
                 android:id="@+id/feedDescTextView"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="@dimen/feed_desc_margin"
-                android:layout_marginEnd="16dp"
-                android:layout_marginBottom="@dimen/feed_desc_margin"
+                android:ellipsize="end"
+                tools:maxLines="2"
                 android:textAppearance="?attr/textAppearanceBody2"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/feedImageView"
-                tools:text="This is a description of the selected feed." />
+                tools:text="This is a description of the selected feed. This is a description of the selected feed. This is a description of the selected feed. This is a description of the selected feed." />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/toggleSubscriptionButton"
@@ -89,8 +86,9 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/feedDescTextView"
+                app:layout_constraintVertical_bias="1.0"
                 tools:text="Subscribe" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.constraintlayout.motion.widget.MotionLayout>
     </com.google.android.material.card.MaterialCardView>
 
     <androidx.recyclerview.widget.RecyclerView

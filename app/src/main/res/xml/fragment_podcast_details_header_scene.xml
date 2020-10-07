@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MotionScene xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:motion="http://schemas.android.com/apk/res-auto">
+
+    <Transition
+        motion:constraintSetEnd="@+id/end"
+        motion:constraintSetStart="@id/start"
+        motion:duration="1">
+        <!--Expands or collapses podcast description-->
+        <OnClick
+            motion:clickAction="toggle"
+            motion:targetId="@+id/feedDescTextView" />
+    </Transition>
+
+    <ConstraintSet android:id="@+id/start">
+        <Constraint
+            android:id="@+id/feedDescTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/feed_desc_margin_horizontal"
+            android:layout_marginTop="@dimen/feed_desc_margin_vertical"
+            android:layout_marginEnd="@dimen/feed_desc_margin_horizontal"
+            android:layout_marginBottom="@dimen/feed_desc_margin_vertical"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toBottomOf="@+id/feedImageView">
+            <CustomAttribute
+                motion:attributeName="maxLines"
+                motion:customIntegerValue="2" />
+        </Constraint>
+    </ConstraintSet>
+
+    <ConstraintSet android:id="@+id/end"
+        motion:deriveConstraintsFrom="@id/start">
+        <Constraint
+            android:id="@+id/feedDescTextView">
+            <CustomAttribute
+                motion:attributeName="maxLines"
+                motion:customIntegerValue="100" />
+        </Constraint>
+    </ConstraintSet>
+</MotionScene>
