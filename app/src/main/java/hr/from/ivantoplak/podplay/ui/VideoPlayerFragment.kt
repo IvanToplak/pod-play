@@ -22,6 +22,7 @@ import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import hr.from.ivantoplak.podplay.R
+import hr.from.ivantoplak.podplay.extensions.slideRightTransition
 import hr.from.ivantoplak.podplay.ui.common.BaseFragment
 import hr.from.ivantoplak.podplay.viewmodel.VideoPlayerViewModel
 import kotlinx.android.synthetic.main.fragment_video_player.*
@@ -46,6 +47,7 @@ class VideoPlayerFragment : BaseFragment() {
     private var playbackStateListener: PlaybackStateListener? = null
 
     override fun doOnCreate(savedInstanceState: Bundle?) {
+        enterTransition = slideRightTransition()
         arguments?.let {
             episodeUrl = it.getString(EPISODE_URL_KEY) ?: ""
         }

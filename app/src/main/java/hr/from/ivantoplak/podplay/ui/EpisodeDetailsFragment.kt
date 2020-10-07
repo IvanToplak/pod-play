@@ -9,6 +9,7 @@ import androidx.fragment.app.activityViewModels
 import com.bumptech.glide.Glide
 import hr.from.ivantoplak.podplay.R
 import hr.from.ivantoplak.podplay.extensions.htmlToSpannable
+import hr.from.ivantoplak.podplay.extensions.slideRightTransition
 import hr.from.ivantoplak.podplay.extensions.toHourMinSec
 import hr.from.ivantoplak.podplay.ui.common.HiltFragment
 import hr.from.ivantoplak.podplay.viewmodel.PodcastViewModel
@@ -22,6 +23,10 @@ class EpisodeDetailsFragment : HiltFragment() {
     }
 
     private val podcastViewModel: PodcastViewModel by activityViewModels()
+
+    override fun doOnCreate(savedInstanceState: Bundle?) {
+        enterTransition = slideRightTransition()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,

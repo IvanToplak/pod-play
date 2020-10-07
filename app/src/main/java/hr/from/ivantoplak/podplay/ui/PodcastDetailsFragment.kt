@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import hr.from.ivantoplak.podplay.R
 import hr.from.ivantoplak.podplay.adapter.EpisodeListAdapter
+import hr.from.ivantoplak.podplay.extensions.slideRightTransition
 import hr.from.ivantoplak.podplay.model.EpisodeViewData
 import hr.from.ivantoplak.podplay.ui.common.HiltFragment
 import hr.from.ivantoplak.podplay.viewmodel.PodcastViewModel
@@ -30,6 +31,10 @@ class PodcastDetailsFragment : HiltFragment(), EpisodeListAdapter.EpisodeListAda
 
     private val viewModel: PodcastViewModel by activityViewModels()
     private lateinit var episodeListAdapter: EpisodeListAdapter
+
+    override fun doOnCreate(savedInstanceState: Bundle?) {
+        enterTransition = slideRightTransition()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,

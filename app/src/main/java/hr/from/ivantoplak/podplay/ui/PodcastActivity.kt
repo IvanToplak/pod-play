@@ -15,6 +15,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import hr.from.ivantoplak.podplay.R
 import hr.from.ivantoplak.podplay.adapter.PodcastListAdapter
 import hr.from.ivantoplak.podplay.adapter.PodcastListAdapter.PodcastListAdapterListener
+import hr.from.ivantoplak.podplay.extensions.fadeIn
+import hr.from.ivantoplak.podplay.extensions.fadeOut
 import hr.from.ivantoplak.podplay.extensions.hide
 import hr.from.ivantoplak.podplay.extensions.show
 import hr.from.ivantoplak.podplay.intent.EXTRA_FEED_URL
@@ -44,7 +46,14 @@ class PodcastActivity : HiltActivity(), PodcastListAdapterListener {
     private lateinit var searchMenuItem: MenuItem
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Switch from splash screen theme to main app theme with delay of 400 ms to avoid UI flashing
+        if (savedInstanceState == null) {
+            Thread.sleep(400)
+        }
+        setTheme(R.style.PodPlay)
+
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_podcast)
         setupToolbar()
         setupScreenTitleProvider()
@@ -147,7 +156,10 @@ class PodcastActivity : HiltActivity(), PodcastListAdapterListener {
             }.collect { podcasts ->
                 podcastViewModel.subscribedPodcasts = podcasts
                 when (podcastViewModel.podcastViewState) {
-                    PodcastViewState.SEARCH -> handleSearchIntent(intent)
+                    PodcastViewState.SEARCH ->
+                        if (supportFragmentManager.backStackEntryCount == 0) {
+                            handleSearchIntent(intent)
+                        }
                     PodcastViewState.SUBSCRIPTION -> showSubscribedPodcasts()
                 }
             }
@@ -157,7 +169,7 @@ class PodcastActivity : HiltActivity(), PodcastListAdapterListener {
     private fun addBackStackListener() {
         supportFragmentManager.addOnBackStackChangedListener {
             if (supportFragmentManager.backStackEntryCount == 0) {
-                podcastRecyclerView.show()
+                podcastRecyclerView.fadeIn()
                 searchMenuItem.isVisible = true
             }
         }
@@ -189,23 +201,32 @@ class PodcastActivity : HiltActivity(), PodcastListAdapterListener {
     }
 
     private fun performSearch(term: String) {
-        loadingPodcastProgressBar.show()
+        updateUIonSearchStarted()
         lifecycle.coroutineScope.launch {
             runCatching { searchViewModel.searchPodcasts(term) }.apply {
                 onSuccess { podcasts ->
-                    loadingPodcastProgressBar.hide()
-                    updateTitle()
+                    updateUIonSearchFinished()
                     podcastListAdapter.setPodcasts(podcasts)
                 }
                 onFailure { exception ->
-                    loadingPodcastProgressBar.hide()
-                    updateTitle()
+                    updateUIonSearchFinished()
                     podcastListAdapter.setPodcasts(emptyList())
                     messageProvider.longPopup(getString(R.string.search_podcasts_error_message))
                     Log.e(TAG, SEARCH_PODCASTS_ERROR_MESSAGE, exception)
                 }
             }
         }
+    }
+
+    private fun updateUIonSearchStarted() {
+        podcastRecyclerView.fadeOut()
+        loadingPodcastProgressBar.show()
+    }
+
+    private fun updateUIonSearchFinished() {
+        podcastRecyclerView.fadeIn()
+        loadingPodcastProgressBar.hide()
+        updateTitle()
     }
 
     private fun showPodcastDetailsScreen() {
@@ -215,8 +236,10 @@ class PodcastActivity : HiltActivity(), PodcastListAdapterListener {
     }
 
     private fun showSubscribedPodcasts() {
+        podcastRecyclerView.fadeOut()
         updateTitle()
         podcastListAdapter.setPodcasts(podcastViewModel.subscribedPodcasts)
+        podcastRecyclerView.fadeIn()
     }
 
     private fun updateTitle() {
